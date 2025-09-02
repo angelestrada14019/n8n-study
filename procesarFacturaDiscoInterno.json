@@ -1,0 +1,301 @@
+{
+  "name": "procesarFacturaDiscoInterno",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "let results = [];\nfor (const item of items) {\n  for (const key of Object.keys(item.binary)) {\n    results.push({\n      json: {\n        filename: key\n      },\n      binary: {\n        data: item.binary[key]\n      }\n    });\n  }\n}\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2576,
+        64
+      ],
+      "id": "c2d96140-5168-4994-8351-7722818b47fe",
+      "name": "Iterate Files"
+    },
+    {
+      "parameters": {
+        "outputPrefix": "data"
+      },
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        -2336,
+        64
+      ],
+      "id": "4674034b-e841-43b0-a6e9-9b02a1817ee1",
+      "name": "Compression"
+    },
+    {
+      "parameters": {
+        "jsCode": "let results = [];\nfor (const item of items) {\n  for (const key of Object.keys(item.binary)) {\n    results.push({\n      json: {\n        filename: key\n      },\n      binary: {\n        data: item.binary[key]\n      }\n    });\n  }\n}\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2096,
+        64
+      ],
+      "id": "1e15d005-05e2-4f5e-b23d-3ca317cddda2",
+      "name": "Iterate Files2",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -1856,
+        64
+      ],
+      "id": "9146cca8-a47e-4b8c-9ea4-cb151dea6b4d",
+      "name": "Get info from PDF2"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/home/node/dockerN8N/factura/mnt/red/{{ $('Get info from PDF2').item.json.text.match(/N°\\s*([A-Z]{4})(\\d+)/).slice(1).join('-') }}.pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -1392,
+        64
+      ],
+      "id": "59497bb9-8cf0-4d33-a464-9e53026a5957",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1616,
+        64
+      ],
+      "id": "b0ff4ed6-b201-448a-8f5c-6f20cbb57981",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "hasAttachments": true
+        },
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlookTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2816,
+        64
+      ],
+      "id": "260b3e04-1fb6-4514-82ec-1a6256ec1d71",
+      "name": "Microsoft Outlook Trigger",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "jWJyq643k3LKk0yT",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -1152,
+        64
+      ],
+      "id": "0d8ea4a6-f2dd-4378-bd59-549335482461",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "toRecipients": "cdiaz@transborder.com.co",
+        "subject": "Confirmación de Factura Procesada",
+        "bodyContent": "=Se procesó la factura No {{ $('Get info from PDF2').item.json.text.match(/N°\\s*([A-Z]{4})(\\d+)/).slice(1).join('-') }}.pdf",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        64
+      ],
+      "id": "76b91610-2666-4bfb-a553-f719a4ad4ce1",
+      "name": "Send a message",
+      "webhookId": "229a8b23-1a87-45f7-bd14-e49513811678",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "jWJyq643k3LKk0yT",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "errorMessage": "=Hubo un error"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        -1840,
+        208
+      ],
+      "id": "d6356afc-ddd0-4383-a167-a36b3ee3a454",
+      "name": "Stop and Error"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Iterate Files": {
+      "main": [
+        [
+          {
+            "node": "Compression",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compression": {
+      "main": [
+        [
+          {
+            "node": "Iterate Files2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Iterate Files2": {
+      "main": [
+        [
+          {
+            "node": "Get info from PDF2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get info from PDF2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft Outlook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Iterate Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "hdKC3mZudCjSGKED"
+  },
+  "versionId": "aa5236a2-6451-4f34-8b6f-eb6405ee106f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b66de1f0b6cdf10cad510d34e6c79a0aaf3c9c965e24537381361e83dd2a26b2"
+  },
+  "id": "xTCQLPfhw4CTNleH",
+  "tags": [
+    {
+      "name": "correo",
+      "id": "3kbUCFPyJckUs1TP",
+      "createdAt": "2025-09-02T02:14:19.843Z",
+      "updatedAt": "2025-09-02T02:14:19.843Z"
+    },
+    {
+      "name": "discoInterno",
+      "id": "KecnigT9ZogC5B2X",
+      "createdAt": "2025-09-02T02:14:35.620Z",
+      "updatedAt": "2025-09-02T02:14:35.620Z"
+    }
+  ]
+}

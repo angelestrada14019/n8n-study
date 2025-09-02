@@ -1,0 +1,76 @@
+{
+  "name": "triggerError",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        48
+      ],
+      "id": "92be8b97-4c09-442f-a500-aee2c47c8c05",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "toRecipients": "cdiaz@transborder.com.co",
+        "subject": "Error procesando factura",
+        "bodyContent": "=Error procesando la factura",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        32,
+        48
+      ],
+      "id": "f430ccea-dda6-4294-848e-eb82acbef563",
+      "name": "Send a message",
+      "webhookId": "92dde68e-7801-45c8-8849-091bdacfe3b5",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "jWJyq643k3LKk0yT",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "68d78d90-64e1-40e4-9dda-e5e4ad5c19f6",
+  "meta": {
+    "instanceId": "b66de1f0b6cdf10cad510d34e6c79a0aaf3c9c965e24537381361e83dd2a26b2"
+  },
+  "id": "hdKC3mZudCjSGKED",
+  "tags": [
+    {
+      "name": "triggerError",
+      "id": "D29f6Yy8j9jKqRm7",
+      "createdAt": "2025-09-02T02:16:29.812Z",
+      "updatedAt": "2025-09-02T02:16:29.812Z"
+    },
+    {
+      "name": "correo",
+      "id": "3kbUCFPyJckUs1TP",
+      "createdAt": "2025-09-02T02:14:19.843Z",
+      "updatedAt": "2025-09-02T02:14:19.843Z"
+    }
+  ]
+}
