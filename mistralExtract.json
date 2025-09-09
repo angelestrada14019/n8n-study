@@ -1,0 +1,344 @@
+{
+  "name": "mistralExtract",
+  "nodes": [
+    {
+      "parameters": {
+        "text": "=contenido del email: {{ $('Edit Fields').item.json.content_email }}\nasunto: {{ $('Edit Fields').item.json.subject_email }}\ncontenido del documento: {{ $('Edit Fields').item.json.document_content }}",
+        "schemaType": "manual",
+        "inputSchema": "={{ JSON.stringify( $json.properties)}}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        -1168,
+        784
+      ],
+      "id": "9e253531-d133-4139-9b5c-49180c3a91b9",
+      "name": "Information Extractor1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6440864c-6546-415d-84f3-74cba1ee7627",
+              "name": "id_template",
+              "value": "={{ $('Start').item.json.id_template }}",
+              "type": "string"
+            },
+            {
+              "id": "6363e1e5-1a7d-46f6-a0b7-56309129a3b8",
+              "name": "json_tarifario",
+              "value": "={{ $('Start').item.json.json_tarifario }}",
+              "type": "object"
+            },
+            {
+              "id": "25622472-e6c8-4db5-b790-4f321954af3a",
+              "name": "content_email",
+              "value": "={{ $('Start').item.json.body_content }}",
+              "type": "string"
+            },
+            {
+              "id": "62d25a4d-3a37-4363-96e6-f51b1cc49278",
+              "name": "subject_email",
+              "value": "={{ $('Start').item.json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "dbbbe4c2-4ab0-4ea7-9801-25979bdeab6a",
+              "name": "document_content",
+              "value": "={{ $json.extractedText }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "selected",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1104,
+        464
+      ],
+      "id": "61b51591-0762-449b-8eaa-578edc659597",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "binaryProperty": "={{ Object.keys($binary)[0] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mistralAi",
+      "typeVersion": 1,
+      "position": [
+        -1280,
+        448
+      ],
+      "id": "3d2c4354-cd61-4d74-80e8-5f8967c24ef5",
+      "name": "Extract text",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "ZQ7Kx520tbNnKd8T",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "id_template",
+              "type": "any"
+            },
+            {
+              "name": "json_tarifario",
+              "type": "any"
+            },
+            {
+              "name": "body_content",
+              "type": "any"
+            },
+            {
+              "name": "subject",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "id": "d7d1a931-b61f-425d-b7c1-f02b42627dca",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -1488,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1104,
+        976
+      ],
+      "id": "ecef86a5-bf85-4ea6-b632-955cccf7303c",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "QEMXGtbxCkBEmym2",
+          "name": "angel n8n key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Tienes esta información para procesar:\n\n📧 Asunto del email:\n{{ $('Edit Fields').item.json.subject_email }}\n\n📧 Contenido del email:\n{{ $('Edit Fields').item.json.content_email }}\n\n📄 Contenido del documento:\n{{ $('Edit Fields').item.json.document_content }}\n\n👉 Recuerda:\n- Responde solo con el JSON, sin explicaciones.\n- Si un campo no aparece en la información, completa con null.\n",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Eres un agente experto en comercio internacional y logística (aéreo, marítimo y terrestre). \nEntiendes sobre aduanas, incoterms, costos logísticos y documentos de transporte. \nTu única tarea es analizar la información que se te proporciona y devolverla en un JSON válido, siguiendo exactamente el JSON Schema que recibirás: \n{{ JSON.stringify( $json.properties)}}\n\nSi no encuentras un valor en el texto, devuelve null\n\nNo inventes información adicional.\n"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -624,
+        464
+      ],
+      "id": "32c484eb-eee7-44bc-8667-2ba348e893a7",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -656,
+        720
+      ],
+      "id": "08a84d5c-1f4f-44cb-8cbc-b82c5f5654ac",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "CvVrqKJhbphm9nnq",
+          "name": "angel n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "={{ JSON.stringify( $json.properties)}}",
+        "autoFix": true,
+        "customizeRetryPrompt": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -528,
+        704
+      ],
+      "id": "bf96e8e7-96be-46e2-a865-a44c04c3b656",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "function inferType(value) {\n  if (Array.isArray(value)) return \"array\";\n  if (typeof value === \"boolean\") return \"boolean\";\n  if (typeof value === \"number\") return \"number\";\n  if (typeof value === \"string\") return \"string\";\n  if (typeof value === \"object\" && value !== null) return \"object\";\n  return \"string\";\n}\n\nfunction buildSchema(obj) {\n  const schema = { type: \"object\", properties: {} };\n  for (const [key, value] of Object.entries(obj)) {\n    const valueType = inferType(value);\n\n    if (valueType === \"array\") {\n      schema.properties[key] = {\n        type: \"array\",\n        items: { type: inferType(value[0] || \"\") },\n        example: value\n      };\n    } else if (valueType === \"object\") {\n      schema.properties[key] = buildSchema(value);\n      schema.properties[key].example = value;\n    } else {\n      schema.properties[key] = { type: valueType, example: value };\n    }\n  }\n  return schema;\n}\n\nreturn {\n  json: buildSchema($json.json_tarifario)\n};\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -832,
+        464
+      ],
+      "id": "b4a09142-80b0-4b2c-912f-a6b9e28ab719",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -608,
+        912
+      ],
+      "id": "aca9eb1e-124f-4a3e-92d0-6ab3fa721d0d",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "CvVrqKJhbphm9nnq",
+          "name": "angel n8n"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract text": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Extract text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        []
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f6dae08f-9558-4692-9eb0-e75290d0fb1d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "739aca636648be576b22696caba800767dfd625797e217dc1956982c37c867e2"
+  },
+  "id": "Emp4Y5oPjsuytOR2",
+  "tags": []
+}
