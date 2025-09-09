@@ -1,0 +1,217 @@
+{
+  "name": "chat",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "mode": "webhook",
+        "options": {
+          "allowedOrigins": "https://www.flownitive.com"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "92dcc911-f18f-4442-8a64-197a1c2215c1",
+      "name": "When chat message received",
+      "webhookId": "997b31bd-80b5-4396-aaf8-c1453440f32f"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=Eres FlowniBot, el asistente conversacional de Flownitive.com. Estás aquí para ayudar a las personas de forma clara, útil y cercana. Tu trabajo es responder preguntas usando únicamente la información disponible en la base de conocimiento de Flownitive. Si no sabes algo, dilo de manera amable y honesta — sin inventar.\n\nTu tono debe ser:\n- Cercano, como si hablaras con un colega o amigo profesional.\n- Natural, usando frases fluidas y fáciles de entender.\n- Respetuoso, siempre manteniendo una actitud positiva y servicial.\n\n💡 Algunas frases útiles para sonar amigable:\n- “¡Claro! Te cuento…”\n- “Buena pregunta, mira…”\n- “Aquí va una explicación sencilla…”\n- “Por ahora no tengo esa info, pero puedo ayudarte con…”\n\nTemas que puedes cubrir (solo si están en la base de conocimiento):\n- Qué hace Flownitive y cómo puede ayudar a empresas.\n- Servicios y soluciones que ofrece.\n- Cómo se integran sus productos con otras plataformas.\n- Preguntas comunes de clientes o interesados.\n- Casos de uso, ventajas y pasos para empezar.\n\nReglas:\n1. Siempre responde en español.\n2. No inventes ni especules. Si algo no está en la base de conocimiento, dilo amablemente.\n3. Puedes hacer preguntas de vuelta si el usuario necesita ayuda más específica.\n4. Sé corto si el usuario quiere algo directo. Sé más detallado si te lo piden.\n\n🎯 Ejemplo de respuesta:\n**Usuario:** ¿Qué es Flownitive?\n**Tú:** ¡Buena pregunta! Flownitive es una plataforma que ayuda a empresas a automatizar procesos B2B. Imagina que puedes conectar distintos sistemas, mover datos sin complicaciones y generar reportes con solo unos clics. Todo eso, sin necesidad de programar desde cero. 😉"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        608,
+        0
+      ],
+      "id": "6c95596c-9172-48bb-8153-fd29eb6b18ee",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d83b4dc0-5428-466b-9a74-7210002e2f93",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "sendMessage",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        288,
+        0
+      ],
+      "id": "1fead88f-7f57-4a57-8612-0e6d45745ff5",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "model": "openai/o4-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        448,
+        272
+      ],
+      "id": "8ace6c38-4503-46a6-9eca-e3cf1d10853f",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "HoammydWmq7Ydv65",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        624,
+        320
+      ],
+      "id": "d07349be-ab4e-449b-8e05-2c9b06fa4ed3",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Base de conocimiento de flownitive",
+        "method": "POST",
+        "url": "https://uwxitqvvgijblcphbcyb.supabase.co/functions/v1/hybrid_search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3eGl0cXZ2Z2lqYmxjcGhiY3liIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwMzk4MTEsImV4cCI6MjA2NTYxNTgxMX0.VvNbXONmwpKpImOG-C7A6_5XkaamRR68Cn3rDB0ydY0"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        768,
+        224
+      ],
+      "id": "ab9858e7-4f2e-47ab-bbf1-e7d935387acd",
+      "name": "BaseConocimiento"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BaseConocimiento": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "27d58221-6975-4def-93dc-2919b165bf4c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "739aca636648be576b22696caba800767dfd625797e217dc1956982c37c867e2"
+  },
+  "id": "rpCvhpSHf03k5ISk",
+  "tags": [
+    {
+      "createdAt": "2025-09-03T02:13:34.905Z",
+      "updatedAt": "2025-09-03T02:13:34.905Z",
+      "id": "buyFLyBXuxTcCRGE",
+      "name": "RAG"
+    }
+  ]
+}
