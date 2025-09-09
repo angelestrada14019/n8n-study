@@ -14,9 +14,9 @@
     },
     {
       "parameters": {
-        "toRecipients": "cdiaz@transborder.com.co",
-        "subject": "Error procesando factura",
-        "bodyContent": "=Error procesando la factura",
+        "toRecipients": "fmunoz@transborder.com.co",
+        "subject": "ERROR - PROCESAMIENTO DE FACTURA",
+        "bodyContent": "=Error procesando la factura: {{ $json.execution.error.message }}",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.microsoftOutlook",
@@ -31,7 +31,7 @@
       "credentials": {
         "microsoftOutlookOAuth2Api": {
           "id": "jWJyq643k3LKk0yT",
-          "name": "Microsoft Outlook account"
+          "name": "fptesa-n8n-integration"
         }
       }
     }
@@ -54,23 +54,23 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "68d78d90-64e1-40e4-9dda-e5e4ad5c19f6",
+  "versionId": "30780c40-8f16-482a-94bf-90b606091c1c",
   "meta": {
-    "instanceId": "b66de1f0b6cdf10cad510d34e6c79a0aaf3c9c965e24537381361e83dd2a26b2"
+    "instanceId": "739aca636648be576b22696caba800767dfd625797e217dc1956982c37c867e2"
   },
   "id": "hdKC3mZudCjSGKED",
   "tags": [
     {
-      "name": "triggerError",
-      "id": "D29f6Yy8j9jKqRm7",
       "createdAt": "2025-09-02T02:16:29.812Z",
-      "updatedAt": "2025-09-02T02:16:29.812Z"
+      "updatedAt": "2025-09-02T02:16:29.812Z",
+      "id": "D29f6Yy8j9jKqRm7",
+      "name": "triggerError"
     },
     {
-      "name": "correo",
-      "id": "3kbUCFPyJckUs1TP",
       "createdAt": "2025-09-02T02:14:19.843Z",
-      "updatedAt": "2025-09-02T02:14:19.843Z"
+      "updatedAt": "2025-09-02T02:14:19.843Z",
+      "id": "3kbUCFPyJckUs1TP",
+      "name": "correo"
     }
   ]
 }
