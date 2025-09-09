@@ -29,16 +29,19 @@
     },
     {
       "parameters": {
-        "jsCode": "let results = [];\nfor (const item of items) {\n  for (const key of Object.keys(item.binary)) {\n    results.push({\n      json: {\n        filename: key\n      },\n      binary: {\n        data: item.binary[key]\n      }\n    });\n  }\n}\nreturn results;"
+        "jsCode": "let results = [];\n\nfor (const item of items) {\n  for (const key of Object.keys(item.binary)) {\n    const fileName = item.binary[key].fileName || \"\";\n    if (fileName.toLowerCase().endsWith(\".pdf\")) {\n      results.push({\n        json: {\n          filename: fileName\n        },\n        binary: {\n          data: item.binary[key]\n        }\n      });\n    }\n  }\n}\n// Si no encontró PDFs, lanza error\nif (results.length === 0) {\n  throw new Error(\"No se encontró ningún archivo PDF en los items.\");\n}\nreturn results;\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2096,
+        -2144,
         64
       ],
       "id": "1e15d005-05e2-4f5e-b23d-3ca317cddda2",
       "name": "Iterate Files2",
+      "alwaysOutputData": false,
+      "retryOnFail": false,
+      "executeOnce": false,
       "onError": "continueErrorOutput"
     },
     {
@@ -49,8 +52,8 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1,
       "position": [
-        -1856,
-        64
+        -1664,
+        128
       ],
       "id": "9146cca8-a47e-4b8c-9ea4-cb151dea6b4d",
       "name": "Get info from PDF2"
@@ -64,7 +67,7 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
       "position": [
-        -1392,
+        -976,
         64
       ],
       "id": "59497bb9-8cf0-4d33-a464-9e53026a5957",
@@ -79,8 +82,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -1616,
-        64
+        -1360,
+        80
       ],
       "id": "b0ff4ed6-b201-448a-8f5c-6f20cbb57981",
       "name": "Merge"
@@ -95,7 +98,10 @@
           ]
         },
         "filters": {
-          "hasAttachments": true
+          "hasAttachments": true,
+          "foldersToInclude": [
+            "AAMkADE5MGVmNzg4LTRmM2QtNGQ1OC04Y2FkLWZmNTdmZjk2NDk2MwAuAAAAAABYQPoKGSsESLo__sne8meoAQATa9jNXqcMS7BuambeDLbGAAAAAAEMAAA="
+          ]
         },
         "options": {
           "downloadAttachments": true
@@ -111,8 +117,8 @@
       "name": "Microsoft Outlook Trigger",
       "credentials": {
         "microsoftOutlookOAuth2Api": {
-          "id": "jWJyq643k3LKk0yT",
-          "name": "Microsoft Outlook account"
+          "id": "owtMMa48rdZlwCQl",
+          "name": "fptesa account n8n-integration"
         }
       }
     },
@@ -121,7 +127,7 @@
       "type": "n8n-nodes-base.limit",
       "typeVersion": 1,
       "position": [
-        -1152,
+        -736,
         64
       ],
       "id": "0d8ea4a6-f2dd-4378-bd59-549335482461",
@@ -129,7 +135,7 @@
     },
     {
       "parameters": {
-        "toRecipients": "cdiaz@transborder.com.co",
+        "toRecipients": "fmunoz@transborder.com.co",
         "subject": "Confirmación de Factura Procesada",
         "bodyContent": "=Se procesó la factura No {{ $('Get info from PDF2').item.json.text.match(/N°\\s*([A-Z]{4})(\\d+)/).slice(1).join('-') }}.pdf",
         "additionalFields": {}
@@ -137,7 +143,7 @@
       "type": "n8n-nodes-base.microsoftOutlook",
       "typeVersion": 2,
       "position": [
-        -880,
+        -464,
         64
       ],
       "id": "76b91610-2666-4bfb-a553-f719a4ad4ce1",
@@ -145,23 +151,48 @@
       "webhookId": "229a8b23-1a87-45f7-bd14-e49513811678",
       "credentials": {
         "microsoftOutlookOAuth2Api": {
-          "id": "jWJyq643k3LKk0yT",
-          "name": "Microsoft Outlook account"
+          "id": "owtMMa48rdZlwCQl",
+          "name": "fptesa account n8n-integration"
         }
       }
     },
     {
       "parameters": {
-        "errorMessage": "=Hubo un error"
+        "errorMessage": "=ERROR - {{ $('Microsoft Outlook Trigger').item.json.from }} - {{ $('Microsoft Outlook Trigger').item.json.subject }}"
       },
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
       "position": [
-        -1840,
-        208
+        -1856,
+        240
       ],
       "id": "d6356afc-ddd0-4383-a167-a36b3ee3a454",
       "name": "Stop and Error"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1504,
+        496
+      ],
+      "id": "cd7de9da-adbb-4d55-b457-aa7823932e4a",
+      "name": "When clicking ‘Execute workflow’",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "command": "ls /home/node/dockerN8N/factura/mnt/red"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -1296,
+        496
+      ],
+      "id": "1a9da4c1-1afc-4eec-8e4e-1bd5b9cdb4f1",
+      "name": "Execute Command"
     }
   ],
   "pinData": {},
@@ -270,32 +301,44 @@
       "main": [
         []
       ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "callerPolicy": "workflowsFromSameOwner",
-    "errorWorkflow": "hdKC3mZudCjSGKED"
+    "errorWorkflow": "hdKC3mZudCjSGKED",
+    "timezone": "America/Bogota"
   },
-  "versionId": "aa5236a2-6451-4f34-8b6f-eb6405ee106f",
+  "versionId": "dc393257-488f-44ba-ae3c-21717e843b94",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "b66de1f0b6cdf10cad510d34e6c79a0aaf3c9c965e24537381361e83dd2a26b2"
+    "instanceId": "739aca636648be576b22696caba800767dfd625797e217dc1956982c37c867e2"
   },
   "id": "xTCQLPfhw4CTNleH",
   "tags": [
     {
-      "name": "correo",
-      "id": "3kbUCFPyJckUs1TP",
       "createdAt": "2025-09-02T02:14:19.843Z",
-      "updatedAt": "2025-09-02T02:14:19.843Z"
+      "updatedAt": "2025-09-02T02:14:19.843Z",
+      "id": "3kbUCFPyJckUs1TP",
+      "name": "correo"
     },
     {
-      "name": "discoInterno",
-      "id": "KecnigT9ZogC5B2X",
       "createdAt": "2025-09-02T02:14:35.620Z",
-      "updatedAt": "2025-09-02T02:14:35.620Z"
+      "updatedAt": "2025-09-02T02:14:35.620Z",
+      "id": "KecnigT9ZogC5B2X",
+      "name": "discoInterno"
     }
   ]
 }
