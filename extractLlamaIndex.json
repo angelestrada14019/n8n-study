@@ -1,0 +1,1036 @@
+{
+  "name": "extractLlamaIndex",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "extract",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2864,
+        608
+      ],
+      "id": "cb4400ae-eb0c-46b2-b528-f91b46a47578",
+      "name": "Webhook",
+      "webhookId": "0932b4d9-453d-4d18-b2ff-2032b844e9e0"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "incoterm_tarifa_template",
+          "mode": "list",
+          "cachedResultName": "incoterm_tarifa_template"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.body.extractionId }}"
+            },
+            {
+              "column": "user_id",
+              "value": "={{ $json.body.userId }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "*"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2576,
+        608
+      ],
+      "id": "ef686ebb-fded-42fd-aeff-ddc4a3f50dec",
+      "name": "Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "lGqUwOiwX6HUdday",
+          "name": "postgress supabase"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "amount": 7
+      },
+      "id": "8ce0698c-bdc0-4b79-8f77-1f53db4757d7",
+      "name": "Wait to stay within service limits1",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        208,
+        464
+      ],
+      "webhookId": "17a96ed6-b5ff-47bb-a8a2-39c1eb40185a",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 1,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "0fa97d86-432a-409a-917e-5f1a002b1ab9",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "PENDING"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "PENDING"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 1,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "e6058aa0-a3e2-4ce3-9bed-6ff41a5be052",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "ERROR"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "ERROR"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 1,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "ceb6338f-4261-40ac-be11-91f61c7302ba",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "CANCELED"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "CANCELED"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 1,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "300fce8c-b19a-4d0c-86e8-f62853c70ce2",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "SUCCESS"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "SUCCESS"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "id": "91c1b73e-4b2a-4675-bf51-5ea85cfbb69f",
+      "name": "Is Job Ready?1",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        496,
+        192
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "errorMessage": "Problem with Llamaparser. Error during parsing."
+      },
+      "id": "ba25528b-b560-4442-9c96-4527fb989ca4",
+      "name": "Stop and Error1",
+      "type": "n8n-nodes-base.stopAndError",
+      "position": [
+        416,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tarifa_template",
+          "mode": "list",
+          "cachedResultName": "tarifa_template"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.template_id }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "*"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2288,
+        624
+      ],
+      "id": "cce30cd8-1fbb-4790-aab5-ff1ff4dda66e",
+      "name": "Postgres1",
+      "credentials": {
+        "postgres": {
+          "id": "lGqUwOiwX6HUdday",
+          "name": "postgress supabase"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Propiedades a usar: {{ $json.json_tarifario.keys() }}\n\nGenera el esquema JSON siguiendo el formato del system prompt. Usa un nombre descriptivo para el esquema basado en el contexto de las propiedades.",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Eres un generador de esquemas JSON para LlamaExtract API. Genera ÚNICAMENTE un objeto JSON válido.\n\nFORMATO REQUERIDO:\n{\n  \"name\": \"nombre_del_esquema\",\n  \"data_schema\": {\n    \"type\": \"object\",\n    \"properties\": {\n      // propiedades según las especificaciones del usuario\n    },\n    \"required\": [\"campo1\", \"campo2\"]\n  },\n  \"config\": {\n    \"extraction_target\": \"PER_DOC\",\n    \"extraction_mode\": \"BALANCED\"\n  }\n}\n\nREGLAS ESTRICTAS:\n1. NO uses bloques de código (```json)\n2. NO agregues texto explicativo antes o después\n3. Usa SOLO las propiedades proporcionadas por el usuario\n4. Cada propiedad debe tener \"type\" y \"description\"\n5. Incluye \"required\" con campos obligatorios\n6. SIEMPRE incluye la sección \"config\" con extraction_target y extraction_mode\n7. Para arrays, define siempre \"items\"\n8. Para objetos anidados, define \"properties\"\n9. Descripciones en español, concisas y claras\n\nRESPONDE SOLO CON EL OBJETO JSON."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -1520,
+        464
+      ],
+      "id": "1819b265-2f5d-473c-bebd-85930bb4382e",
+      "name": "Basic LLM Chain",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-3.7-sonnet",
+        "options": {
+          "maxTokens": 2000,
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -1680,
+        832
+      ],
+      "id": "b0ee72ac-3d2b-446f-addb-71c5e69ae57d",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "HoammydWmq7Ydv65",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"type\": \"string\",\n      \"description\": \"Nombre del esquema generado\"\n    },\n    \"data_schema\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"type\": {\n          \"type\": \"string\",\n          \"enum\": [\"object\"]\n        },\n        \"properties\": {\n          \"type\": \"object\",\n          \"additionalProperties\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"type\": {\n                \"type\": \"string\",\n                \"enum\": [\"string\", \"number\", \"boolean\", \"object\", \"array\", \"null\"]\n              },\n              \"description\": {\n                \"type\": \"string\"\n              },\n              \"items\": {\n                \"type\": \"object\",\n                \"description\": \"Para arrays, define la estructura de los elementos\"\n              },\n              \"properties\": {\n                \"type\": \"object\",\n                \"description\": \"Para objetos anidados\"\n              },\n              \"anyOf\": {\n                \"type\": \"array\",\n                \"description\": \"Para tipos múltiples (ej: string o null)\"\n              }\n            },\n            \"required\": [\"type\", \"description\"]\n          }\n        },\n        \"required\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          },\n          \"description\": \"Lista de campos obligatorios\"\n        }\n      },\n      \"required\": [\"type\", \"properties\"]\n    },\n    \"config\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"extraction_target\": {\n          \"type\": \"string\",\n          \"enum\": [\"PER_DOC\", \"PER_PAGE\"]\n        },\n        \"extraction_mode\": {\n          \"type\": \"string\",\n          \"enum\": [\"BALANCED\", \"FAST\", \"ACCURATE\"]\n        }\n      },\n      \"required\": [\"extraction_target\", \"extraction_mode\"]\n    }\n  },\n  \"required\": [\"name\", \"data_schema\", \"config\"]\n}",
+        "autoFix": true,
+        "customizeRetryPrompt": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -1440,
+        688
+      ],
+      "id": "56ca7fcb-943c-413d-82d3-af58c6702cc9",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4o-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -1328,
+        848
+      ],
+      "id": "f8f42e20-6726-4d00-a048-b471bac21c78",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "HoammydWmq7Ydv65",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "12651fb2-e74f-47aa-b448-dbf9dec55163",
+              "leftValue": "={{ $json.template_llama_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "2d7ce990-e9fc-41dd-929d-5d71db1f9aca",
+              "leftValue": "={{ $json.template_llama_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1600,
+        160
+      ],
+      "id": "b34c00f8-9004-42b6-8c67-dfbe1fe2a22c",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.cloud.llamaindex.ai/api/v1/files",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer [api key]"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "upload_file",
+              "inputDataFieldName": "={{ Object.keys($binary)[0] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "09b3adf9-672e-44ec-8dab-cbf6cdd72c8c",
+      "name": "uploadFile",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -608,
+        144
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.cloud.llamaindex.ai/api/v1/extraction/extraction-agents",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer [api key]"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1152,
+        464
+      ],
+      "id": "326c7fb5-5ffc-4873-886c-81c9095dfca1",
+      "name": "extractionAgent"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.cloud.llamaindex.ai/api/v1/extraction/jobs/{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer [api key]"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3b1b3b2c-b72d-4111-af1a-54f435739a7c",
+      "name": "llamaIndexParseStatus",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        80,
+        160
+      ],
+      "typeVersion": 4.2,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.cloud.llamaindex.ai/api/v1/extraction/jobs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer [appi key]"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"extraction_agent_id\": \"{{$('Start').item.json.template_llama_id || $('Update rows in a table').item.json.id_llama_agent}}\",\n  \"file_id\": \"{{ $json.id }}\"\n}",
+        "options": {}
+      },
+      "id": "f549fa24-5db8-4020-bb69-0b1bbae7ea41",
+      "name": "extractionJob",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -320,
+        144
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "url": "=https://api.cloud.llamaindex.ai/api/v1/extraction/jobs/{{ $json.id }}/result",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer [api key]"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a4a73ebb-e834-40ba-afd4-fe700045495a",
+      "name": "llamaIndexParseStatus1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        816,
+        272
+      ],
+      "typeVersion": 4.2,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlookTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2880,
+        816
+      ],
+      "id": "33f7d4b4-a6ae-48c7-8e6d-ec18a5778ce8",
+      "name": "Microsoft Outlook Trigger",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "EsuNlR2rU98Rd5pT",
+          "name": "aestrada account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "id_template",
+              "type": "any"
+            },
+            {
+              "name": "json_tarifario",
+              "type": "any"
+            },
+            {
+              "name": "body_content",
+              "type": "any"
+            },
+            {
+              "name": "subject",
+              "type": "any"
+            },
+            {
+              "name": "template_llama_id",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "id": "9466da0f-bfc0-4048-8ccb-a0d6984c489b",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -2016,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tarifa_template",
+          "mode": "list",
+          "cachedResultName": "tarifa_template"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Start').item.json.id_template }}",
+            "id_llama_agent": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "value",
+              "displayName": "value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "etapa_logistica",
+              "displayName": "etapa_logistica",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "TRANSPORTE_TERRESTRE_ORIGEN",
+                  "value": "TRANSPORTE_TERRESTRE_ORIGEN"
+                },
+                {
+                  "name": "TRANSPORTE_TERRESTRE_DESTINO",
+                  "value": "TRANSPORTE_TERRESTRE_DESTINO"
+                },
+                {
+                  "name": "RECARGOS_AL_FLETE_CARRIER_ORIGEN",
+                  "value": "RECARGOS_AL_FLETE_CARRIER_ORIGEN"
+                },
+                {
+                  "name": "RECARGOS_AL_FLETE_CARRIER_DESTINO",
+                  "value": "RECARGOS_AL_FLETE_CARRIER_DESTINO"
+                },
+                {
+                  "name": "FLETES_INTERNACIONALES",
+                  "value": "FLETES_INTERNACIONALES"
+                },
+                {
+                  "name": "GASTOS_DESTINO",
+                  "value": "GASTOS_DESTINO"
+                },
+                {
+                  "name": "GASTOS_ORIGEN",
+                  "value": "GASTOS_ORIGEN"
+                },
+                {
+                  "name": "DEVOLUCION_CONTENEDOR_DESTINO_FCL",
+                  "value": "DEVOLUCION_CONTENEDOR_DESTINO_FCL"
+                }
+              ],
+              "removed": true
+            },
+            {
+              "id": "modalidad_transporte",
+              "displayName": "modalidad_transporte",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "MF",
+                  "value": "MF"
+                },
+                {
+                  "name": "ML",
+                  "value": "ML"
+                },
+                {
+                  "name": "A",
+                  "value": "A"
+                }
+              ],
+              "removed": true
+            },
+            {
+              "id": "id_llama_agent",
+              "displayName": "id_llama_agent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -944,
+        464
+      ],
+      "id": "c5e8b777-9ab4-4300-b307-99ba141aeb03",
+      "name": "Update rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "lGqUwOiwX6HUdday",
+          "name": "postgress supabase"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "primary-production-052f.up.railway.app",
+            "user-agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36 Edg/137.0.0.0",
+            "content-length": "103",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "es-419,es;q=0.9,es-ES;q=0.8,en;q=0.7,en-GB;q=0.6,en-US;q=0.5,es-CO;q=0.4",
+            "content-type": "application/json",
+            "origin": "https://studio-omega-rose.vercel.app",
+            "priority": "u=1, i",
+            "referer": "https://studio-omega-rose.vercel.app/",
+            "sec-ch-ua": "\"Microsoft Edge\";v=\"137\", \"Chromium\";v=\"137\", \"Not/A)Brand\";v=\"24\"",
+            "sec-ch-ua-mobile": "?1",
+            "sec-ch-ua-platform": "\"Android\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "x-forwarded-for": "181.234.205.97",
+            "x-forwarded-host": "primary-production-052f.up.railway.app",
+            "x-forwarded-proto": "https",
+            "x-railway-edge": "railway/us-east4-eqdc4a",
+            "x-railway-request-id": "HeaCKumaSrOrgzEiAax-fw",
+            "x-real-ip": "181.234.205.97",
+            "x-request-start": "1750309351689"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "extractionId": "f2c9f483-aaae-437f-91db-750b5fcd6d52",
+            "userId": "ace21e69-7441-4ea2-af8a-a58feaffbec1"
+          },
+          "webhookUrl": "https://primary-production-052f.up.railway.app/webhook/extract",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait to stay within service limits1": {
+      "main": [
+        [
+          {
+            "node": "llamaIndexParseStatus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Job Ready?1": {
+      "main": [
+        [
+          {
+            "node": "Wait to stay within service limits1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "llamaIndexParseStatus1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        []
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "extractionAgent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "uploadFile",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "uploadFile": {
+      "main": [
+        [
+          {
+            "node": "extractionJob",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extractionAgent": {
+      "main": [
+        [
+          {
+            "node": "Update rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "llamaIndexParseStatus": {
+      "main": [
+        [
+          {
+            "node": "Is Job Ready?1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extractionJob": {
+      "main": [
+        [
+          {
+            "node": "llamaIndexParseStatus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "llamaIndexParseStatus1": {
+      "main": [
+        []
+      ]
+    },
+    "Microsoft Outlook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update rows in a table": {
+      "main": [
+        [
+          {
+            "node": "uploadFile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "17b81d91-8b74-4a87-af56-c5f290975103",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "739aca636648be576b22696caba800767dfd625797e217dc1956982c37c867e2"
+  },
+  "id": "b2SKP7SugaJsSzPQ",
+  "tags": []
+}
