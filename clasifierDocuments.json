@@ -1,0 +1,544 @@
+{
+  "name": "clasifierDocuments",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "output": "fields",
+        "fields": [
+          "body",
+          "bodyPreview",
+          "from",
+          "hasAttachments",
+          "subject"
+        ],
+        "filters": {
+          "hasAttachments": true,
+          "foldersToInclude": [
+            "AAMkADc2MWJhYWQxLTIwZDgtNDdiYy1iYTgyLWNlM2FhYWU1ODI4NAAuAAAAAADrHt3eixoGT7YOokJC8J0MAQDGkUxXxws-QL40QOihYTyIAAGrJGjbAAA="
+          ]
+        },
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlookTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2912,
+        512
+      ],
+      "id": "5ba4faca-de62-4cf2-a334-49a98806afcc",
+      "name": "Microsoft Outlook Trigger",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "EsuNlR2rU98Rd5pT",
+          "name": "aestrada account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -2032,
+        384
+      ],
+      "id": "90f194f6-5f28-4941-a6a4-4fe08d8858fa",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "QEMXGtbxCkBEmym2",
+          "name": "angel n8n key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "=subject:  {{ $('Microsoft Outlook Trigger').item.json.subject }}\nbody: {{ $('Microsoft Outlook Trigger').item.json.body.content }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "incoterm",
+              "description": "=son reglas internacionales que definen las responsabilidades y riesgos de compradores y vendedores en el comercio global: {{ $json.enums.incoterms }}",
+              "required": true
+            },
+            {
+              "name": "modalidad_transporte",
+              "description": "=es la forma o la modalidad en que puede transportar una carga, puede ser {{ $json.enums.modalidad_transporte }}",
+              "required": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        -2016,
+        224
+      ],
+      "id": "c4586354-64d7-4f2e-8d7f-21f038110764",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select jsonb_build_object(\n  'incoterms', (\n      select jsonb_agg(e::text)\n      from unnest(enum_range(null::incoterms)) e\n  ),\n  'modalidad_transporte', (\n      select jsonb_agg(e::text)\n      from unnest(enum_range(null::modalidad_transporte)) e\n  )\n) as enums;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2224,
+        240
+      ],
+      "id": "24ab3536-e774-452f-8ae4-65fb9d2a8cc4",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "lGqUwOiwX6HUdday",
+          "name": "postgress supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select tt.id as id_template,\n      tt.value as json_tarifario,\n      tt.id_llama_agent as template_llama_id\nfrom incoterm_tarifa_template itt\njoin tarifa_template tt \n  on itt.id_tarifa_template = tt.id\nwhere itt.incoterm =  $1\n  and tt.modalidad_transporte = $2;",
+        "options": {
+          "queryReplacement": "={{ $json.output.incoterm }},{{ $json.output.modalidad_transporte }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1680,
+        320
+      ],
+      "id": "326f4694-9e4b-4e84-8812-86536684117a",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "postgres": {
+          "id": "lGqUwOiwX6HUdday",
+          "name": "postgress supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1456,
+        448
+      ],
+      "id": "b05adb10-eb7f-44c7-afbf-28f11c0aae42",
+      "name": "Merge",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Emp4Y5oPjsuytOR2",
+          "mode": "list",
+          "cachedResultName": "mistralExtract"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_template": "={{ $('Merge').item.json.id_template }}",
+            "json_tarifario": "={{ $('Merge').item.json.json_tarifario }}",
+            "body_content": "={{ $('Merge').item.json.body.content }}",
+            "subject": "={{ $('Merge').item.json.subject }}"
+          },
+          "matchingColumns": [
+            "id_template",
+            "json_tarifario",
+            "body_content",
+            "subject"
+          ],
+          "schema": [
+            {
+              "id": "id_template",
+              "displayName": "id_template",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "json_tarifario",
+              "displayName": "json_tarifario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "body_content",
+              "displayName": "body_content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -1120,
+        256
+      ],
+      "name": "Call mistralExtract",
+      "id": "131c8b8e-5418-43f7-a017-87ee5f6b93ca"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "b2SKP7SugaJsSzPQ",
+          "mode": "list",
+          "cachedResultName": "extractLlamaIndex"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_template": "={{ $('Merge').item.json.id_template }}",
+            "json_tarifario": "={{ $('Merge').item.json.json_tarifario }}",
+            "body_content": "={{ $('Merge').item.json.body.content }}",
+            "subject": "={{ $('Merge').item.json.subject }}",
+            "template_llama_id": "={{ $('Merge').item.json.template_llama_id }}"
+          },
+          "matchingColumns": [
+            "id_template",
+            "json_tarifario",
+            "body_content",
+            "subject"
+          ],
+          "schema": [
+            {
+              "id": "id_template",
+              "displayName": "id_template",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "json_tarifario",
+              "displayName": "json_tarifario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "body_content",
+              "displayName": "body_content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "template_llama_id",
+              "displayName": "template_llama_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -1136,
+        512
+      ],
+      "name": "Call extractLlamaIndex",
+      "id": "6608039b-5135-4bbb-89e5-153a547ef1f9"
+    }
+  ],
+  "pinData": {
+    "Call mistralExtract": [
+      {
+        "json": {
+          "text": "{\n  \"via\": \"Air\",\n  \"fletes\": null,\n  \"moneda\": {\n    \"moneda\": \"USD\"\n  },\n  \"contrato\": null,\n  \"minimaFs\": null,\n  \"recargos\": null,\n  \"aerolinea\": {\n    \"codigo\": null\n  },\n  \"frecuenciaS\": null,\n  \"fsKgVolNeto\": null,\n  \"tipoTarifaS\": null,\n  \"agenteOrigen\": {\n    \"codigo\": null\n  },\n  \"fsKgVolVenta\": null,\n  \"minimaFsNeto\": null,\n  \"pesoCobrable\": 704.29,\n  \"agenteDestino\": {\n    \"codigo\": null\n  },\n  \"minimaFsVenta\": null,\n  \"n100KgVolNeto\": null,\n  \"p100KgVolNeto\": null,\n  \"p300KgVolNeto\": null,\n  \"p500KgVolNeto\": null,\n  \"vigenciaDesde\": null,\n  \"vigenciaHasta\": \"2025-09-17\",\n  \"fleteKgVolNeto\": null,\n  \"n100KgVolVenta\": null,\n  \"p1000KgVolNeto\": null,\n  \"p100KgVolVenta\": null,\n  \"p3000KgVolNeto\": null,\n  \"p300KgVolVenta\": null,\n  \"p500KgVolVenta\": null,\n  \"tiempoTransito\": null,\n  \"minimaFleteNeto\": null,\n  \"minimaOtrosNeto\": null,\n  \"p1000KgVolVenta\": null,\n  \"p3000KgVolVenta\": null,\n  \"aeropuertoOrigen\": {\n    \"ciudad\": {\n      \"pais\": {\n        \"codigo\": \"CO\"\n      },\n      \"codigo\": null\n    },\n    \"codigo\": \"BOG\"\n  },\n  \"minimaFleteVenta\": null,\n  \"minimaOtrosVenta\": null,\n  \"otrosFleteMinima\": null,\n  \"aeropuertoDestino\": {\n    \"ciudad\": {\n      \"pais\": {\n        \"codigo\": \"GT\"\n      },\n      \"codigo\": null\n    },\n    \"codigo\": null\n  },\n  \"descripcionTarifa\": \"Costos PREPAGO DAP para carga aerea\",\n  \"otrosRecargosNeto\": 490,\n  \"mercanciaPeligrosa\": false,\n  \"otrosRecargosVenta\": 490,\n  \"otrosFleteKgVolNeto\": null,\n  \"minimaOtrosFleteNeto\": null,\n  \"otrosFleteKgVolVenta\": null,\n  \"fechaEstimadaEmbarque\": null,\n  \"fsKgVolPerecederoNeto\": null,\n  \"minimaOtrosFleteVenta\": null,\n  \"categoriaCargueArchivo\": \"FLETES_INTERNACIONALES\",\n  \"fsKgVolPerecederoVenta\": null,\n  \"mercanciaPeligrosaNeto\": 0,\n  \"minimaFsPerecederoNeto\": null,\n  \"mercanciaPeligrosaVenta\": 0,\n  \"minimaFsPerecederoVenta\": null,\n  \"minimaOtrosRecargosNeto\": null,\n  \"n100KgVolPerecederoNeto\": null,\n  \"numeroRequerimientoSpot\": null,\n  \"p100KgVolPerecederoNeto\": null,\n  \"p300KgVolPerecederoNeto\": null,\n  \"p500KgVolPerecederoNeto\": null,\n  \"fleteKgVolPerecederoNeto\": null,\n  \"minimaOtrosRecargosVenta\": null,\n  \"minimaRecargosFleteVenta\": null,\n  \"n100KgVolPerecederoVenta\": null,\n  \"p1000KgVolPerecederoNeto\": null,\n  \"p100KgVolPerecederoVenta\": null,\n  \"p3000KgVolPerecederoNeto\": null,\n  \"p300KgVolPerecederoVenta\": null,\n  \"p500KgVolPerecederoVenta\": null,\n  \"minimaFletePerecederoNeto\": null,\n  \"p1000KgVolPerecederoVenta\": null,\n  \"p3000KgVolPerecederoVenta\": null,\n  \"minimaFletePerecederoVenta\": null,\n  \"otrosFleteKgVolPerecederoNeto\": null,\n  \"minimaOtrosFletePerecederoNeto\": null,\n  \"otrosFleteKgVolPerecederoVenta\": null,\n  \"minimaOtrosFletePerecederoVenta\": null,\n  \"observacionesFletesInternacionales\": \"Las tarifas no incluyen: Pago de IVA/impuestos, pagos a terceros, revisiones, selectivas, permisos, sobrepeso, almacenamiento, servicio de transferencia, cargos adicionales en origen y destino sobre lo cotizado, aduanas, cargo por manejo en terminal, entre otros. La tarifa no incluye cargos locales en destino con la aerolínea, estos cargos se confirman en destino después de la llegada. La tarifa no aplica para carga peligrosa, sobredimensionada o con sobrepeso. El cargo por entrega en destino se aplica únicamente a la dirección indicada. Todo embarque debe de ser PP.\",\n  \"causalActualizacionFletesInternacionales\": null\n}"
+        }
+      },
+      {
+        "json": {
+          "text": "{\n  \"moneda\": {\n    \"moneda\": \"USD\"\n  },\n  \"aduanaNeto\": 100,\n  \"aduanaVenta\": 100,\n  \"agenteOrigen\": {\n    \"codigo\": null\n  },\n  \"handlingNeto\": 75,\n  \"agenteDestino\": {\n    \"codigo\": null\n  },\n  \"gastosAwbNeto\": 50,\n  \"handlingVenta\": 75,\n  \"vigenciaDesde\": null,\n  \"vigenciaHasta\": \"2025-09-17\",\n  \"gastosAwbVenta\": 50,\n  \"aeropuertoOrigen\": {\n    \"ciudad\": {\n      \"pais\": {\n        \"codigo\": \"CO\"\n      },\n      \"codigo\": \"BOGOTA\"\n    },\n    \"codigo\": \"BOG\"\n  },\n  \"aeropuertoDestino\": {\n    \"ciudad\": {\n      \"pais\": {\n        \"codigo\": \"GT\"\n      },\n      \"codigo\": \"CIUDAD DE GUATEMALA\"\n    },\n    \"codigo\": \"GUA\"\n  },\n  \"documentacionNeto\": 0,\n  \"documentacionVenta\": 0,\n  \"otrosGastosAwbNeto\": 40,\n  \"gastosOperacionNeto\": 195,\n  \"otrosGastosAwbVenta\": 40,\n  \"gastosOperacionVenta\": 195,\n  \"categoriaCargueArchivo\": \"GASTOS_DESTINO\",\n  \"numeroRequerimientoSpot\": null,\n  \"costosAeroportuariosNeto\": 0,\n  \"otrosGastosOperacionNeto\": 30,\n  \"costosAereportuariosVenta\": 0,\n  \"otrosGastosOperacionVenta\": 30,\n  \"observacionesGastosDestino\": \"Las tarifas no incluyen ningún tipo de impuesto; pagos a terceros, inspecciones, selectivos, permisos, sobrepeso, almacenaje, servicio de traslado, cargos adicionales en origen y destino sobre lo cotizado, Aduana, Terminal Handling Charge, otros. La tarifa no incluye cargos locales de aerolínea en destino, dichos cargos son confirmados una vez la carga arribe para ser liberada. En caso de manejar moneda distinta al USD, se hará de acuerdo con el tipo de cambio vigente de los países estipulados en esta cotización. Tarifas para mercancías no peligrosas. De ser necesario, se aplicarán recargos por carga peligrosa de acuerdo al tipo de carga. Las tarifas no incluyen cargos adicionales en caso de que la carga esté sujeta a inspección en origen o destino a petición de las aduanas o entidades autorizadas a tal efecto. Las tarifas de entrega nacional/local están sujetas a cambios debido a aumentos de combustible sin previo aviso. Tarifa no incluye seguro de carga, en caso de requerirlo favor cotizar. La facturación genera un interés mensual del 3.5 porciento una vez vencida la factura. Para embarques bajo Incoterm DAP, se requieren al menos 48 horas hábiles para la coordinación con el destino final. Tarifa expresada en dólares americanos (USD). Considerar 2.2 porciento por el cobro de financiamiento extra correspondiente a gastos pagados en impuestos, almacenaje, permisos\",\n  \"causalActualizacionGastosDestino\": null\n}"
+        }
+      }
+    ],
+    "Call extractLlamaIndex": [
+      {
+        "json": {
+          "run_id": "1964460d-65aa-4434-aa72-83428d53b5a4",
+          "extraction_agent_id": "1628def6-fd87-454a-aa23-7d22a303d7c0",
+          "data": {
+            "via": "Aérea",
+            "fletes": 0,
+            "moneda": "USD",
+            "contrato": "19469",
+            "minimaFs": 0,
+            "recargos": 0,
+            "aerolinea": "",
+            "frecuenciaS": "",
+            "fsKgVolNeto": 0,
+            "tipoTarifaS": "DAP PREPAGO",
+            "agenteOrigen": "GRUPO TLA GUATEMALA, S.A.",
+            "fsKgVolVenta": 0,
+            "minimaFsNeto": 0,
+            "pesoCobrable": 704.29,
+            "agenteDestino": "",
+            "minimaFsVenta": 0,
+            "n100KgVolNeto": 0,
+            "p100KgVolNeto": 0,
+            "p300KgVolNeto": 0,
+            "p500KgVolNeto": 0,
+            "vigenciaDesde": "",
+            "vigenciaHasta": "2025-09-17",
+            "fleteKgVolNeto": 0,
+            "n100KgVolVenta": 0,
+            "p1000KgVolNeto": 0,
+            "p100KgVolVenta": 0,
+            "p3000KgVolNeto": 0,
+            "p300KgVolVenta": 0,
+            "p500KgVolVenta": 0,
+            "tiempoTransito": "",
+            "minimaFleteNeto": 0,
+            "minimaOtrosNeto": 0,
+            "p1000KgVolVenta": 0,
+            "p3000KgVolVenta": 0,
+            "aeropuertoOrigen": "GUA - AIRPORT, GUATEMALA",
+            "minimaFleteVenta": 0,
+            "minimaOtrosVenta": 0,
+            "otrosFleteMinima": 0,
+            "aeropuertoDestino": "zona 11, CIUDAD DE GUATEMALA, GUATEMALA",
+            "descripcionTarifa": "Costos PREPAGO DAP para carga aérea de 704.29 kg y 0.78 CBM, 3 bultos, desde GUA - AIRPORT, GUATEMALA a zona 11, Ciudad de Guatemala. Incluye costos locales: Handling USD 75, AWB USD 50, Desconsolidación USD 30, Otros cargos (retiro de AWB) USD 40, Delivery USD 195, Trámite aduanal (opcional) USD 100. Subtotal y total USD 490.00. No incluye impuestos, cargos de aerolínea en destino, seguro, ni recargos por mercancía peligrosa.",
+            "otrosRecargosNeto": 0,
+            "mercanciaPeligrosa": false,
+            "otrosRecargosVenta": 0,
+            "otrosFleteKgVolNeto": 0,
+            "minimaOtrosFleteNeto": 0,
+            "otrosFleteKgVolVenta": 0,
+            "fechaEstimadaEmbarque": "",
+            "fsKgVolPerecederoNeto": 0,
+            "minimaOtrosFleteVenta": 0
+          },
+          "extraction_metadata": {
+            "field_metadata": {},
+            "usage": {
+              "num_pages_extracted": 2,
+              "num_document_tokens": 1877,
+              "num_output_tokens": 553
+            }
+          }
+        }
+      },
+      {
+        "json": {
+          "run_id": "3b25f658-ab13-470f-9545-745ba92bf0bc",
+          "extraction_agent_id": "cb2840a5-f52f-4ecb-bc13-db52110d9ee7",
+          "data": {
+            "moneda": "USD",
+            "aduanaNeto": 100,
+            "aduanaVenta": 100,
+            "agenteOrigen": null,
+            "handlingNeto": 75,
+            "agenteDestino": null,
+            "gastosAwbNeto": 50,
+            "handlingVenta": 75,
+            "vigenciaDesde": "2025-09-02",
+            "vigenciaHasta": "2025-09-17",
+            "gastosAwbVenta": 50,
+            "aeropuertoOrigen": "GUA - AIRPORT, GUATEMALA",
+            "aeropuertoDestino": "zona 11, CIUDAD DE GUATEMALA, GUATEMALA",
+            "documentacionNeto": null,
+            "documentacionVenta": null,
+            "otrosGastosAwbNeto": 40,
+            "gastosOperacionNeto": 30,
+            "otrosGastosAwbVenta": 40,
+            "gastosOperacionVenta": 30,
+            "categoriaCargueArchivo": null,
+            "numeroRequerimientoSpot": null,
+            "costosAeroportuariosNeto": null,
+            "otrosGastosOperacionNeto": 195,
+            "costosAereportuariosVenta": null,
+            "otrosGastosOperacionVenta": 195,
+            "observacionesGastosDestino": null,
+            "causalActualizacionGastosDestino": null
+          },
+          "extraction_metadata": {
+            "field_metadata": {},
+            "usage": {
+              "num_pages_extracted": 2,
+              "num_document_tokens": 1877,
+              "num_output_tokens": 241
+            }
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Microsoft Outlook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Call mistralExtract",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call extractLlamaIndex",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "32117c63-c025-4c36-8f5d-a3e07bb309d8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "739aca636648be576b22696caba800767dfd625797e217dc1956982c37c867e2"
+  },
+  "id": "mPvHJOZjfRDMRpZj",
+  "tags": [
+    {
+      "createdAt": "2025-09-02T02:14:19.843Z",
+      "updatedAt": "2025-09-02T02:14:19.843Z",
+      "id": "3kbUCFPyJckUs1TP",
+      "name": "correo"
+    },
+    {
+      "createdAt": "2025-09-03T02:14:22.365Z",
+      "updatedAt": "2025-09-03T02:14:22.365Z",
+      "id": "bHotgPib6o6JBYK8",
+      "name": "document"
+    }
+  ]
+}
